@@ -192,7 +192,7 @@ void MessageDrop(Context& ctx, const Descriptor& msg) {
   )rs");
 }
 
-void MessageSettableValue(Context& ctx, const Descriptor& msg) {
+void MessageSettableValueForView(Context& ctx, const Descriptor& msg) {
   switch (ctx.opts().kernel) {
     case Kernel::kCpp:
       ctx.Emit({{"copy_from_thunk", ThunkName(ctx, msg, "copy_from")}}, R"rs(
@@ -329,7 +329,7 @@ void MessageProxiedInRepeated(Context& ctx, const Descriptor& msg) {
             // SAFETY:
             // - `f.as_raw()` is a valid `upb_Array*`.
             // - `i < len(f)` is promised by the caller.
-            let mut dest_msg = unsafe {
+            let dest_msg = unsafe {
               $pbr$::upb_Array_GetMutable(f.as_raw($pbi$::Private), i).msg
             }.expect("upb_Array* element should not be NULL");
 
@@ -391,7 +391,7 @@ void MessageProxiedInRepeated(Context& ctx, const Descriptor& msg) {
 
           fn repeated_copy_from(
             src: $pb$::View<$pb$::Repeated<Self>>,
-            mut dest: $pb$::Mut<$pb$::Repeated<Self>>,
+            dest: $pb$::Mut<$pb$::Repeated<Self>>,
           ) {
               // SAFETY:
               // - Elements of `src` and `dest` have message minitable `$minitable$`.
@@ -519,7 +519,8 @@ void GenerateRs(Context& ctx, const Descriptor& msg) {
                                    AccessorCase::MUT);
           }
         }},
-       {"settable_impl", [&] { MessageSettableValue(ctx, msg); }},
+       {"settable_impl_for_view",
+        [&] { MessageSettableValueForView(ctx, msg); }},
        {"repeated_impl", [&] { MessageProxiedInRepeated(ctx, msg); }},
        {"unwrap_upb",
         [&] {
@@ -636,8 +637,7 @@ void GenerateRs(Context& ctx, const Descriptor& msg) {
              -> Self::AbsentMutData<'_> {
              // SAFETY: The raw ptr msg_ref is valid
             unsafe {
-              (present_mutator.optional_vtable().clearer);
-              (present_mutator.msg_ref().msg());
+              (present_mutator.optional_vtable().clearer)(present_mutator.msg_ref().msg());
 
              $pbi$::RawVTableOptionalMutatorData::new($pbi$::Private,
                present_mutator.msg_ref(),
@@ -655,7 +655,18 @@ void GenerateRs(Context& ctx, const Descriptor& msg) {
           }
         }
 
-        $settable_impl$
+        $settable_impl_for_view$
+
+        impl $pb$::SettableValue<$Msg$> for $Msg$ {
+          fn set_on<'dst>(
+            self, _private: $pbi$::Private, mutator: $pb$::Mut<'dst, $Msg$>)
+            where $Msg$: 'dst {
+            //~ TODO: b/320701507 - This current will copy the message and then
+            //~ drop it, this copy would be avoided on upb kernel.
+            self.as_view().set_on($pbi$::Private, mutator);
+          }
+        }
+
         $repeated_impl$
 
         #[derive(Debug)]

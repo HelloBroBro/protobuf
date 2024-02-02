@@ -9,7 +9,7 @@
 
 use googletest::prelude::*;
 use matchers::{is_set, is_unset};
-use protobuf::Optional;
+use protobuf::{MutProxy, Optional};
 use unittest_proto::{TestAllTypes, TestAllTypes_};
 
 #[test]
@@ -668,16 +668,75 @@ fn test_nonempty_default_string_accessors() {
 
 #[test]
 fn test_singular_msg_field() {
-    use TestAllTypes_::{NestedMessageMut, NestedMessageView};
+    use TestAllTypes_::*;
 
     let mut msg = TestAllTypes::new();
     let msg_view: NestedMessageView = msg.optional_nested_message();
     // testing reading an int inside a view
     assert_that!(msg_view.bb(), eq(0));
 
-    let msg_mut: NestedMessageMut = msg.optional_nested_message_mut();
+    let mut nested_msg_mut: NestedMessageMut = msg.optional_nested_message_mut().or_default();
     // test reading an int inside a mut
-    assert_that!(msg_mut.bb(), eq(0));
+    assert_that!(nested_msg_mut.bb(), eq(0));
+
+    // Test setting an owned NestedMessage onto another message.
+    let mut new_nested = NestedMessage::new();
+    new_nested.bb_mut().set(7);
+    nested_msg_mut.set(new_nested);
+    assert_that!(nested_msg_mut.bb(), eq(7));
+}
+
+#[test]
+fn test_message_opt() {
+    let msg = TestAllTypes::new();
+    let opt: Optional<
+        unittest_proto::TestAllTypes_::NestedMessageView<'_>,
+        unittest_proto::TestAllTypes_::NestedMessageView<'_>,
+    > = msg.optional_nested_message_opt();
+    assert_that!(opt.is_set(), eq(false));
+    assert_that!(opt.into_inner().bb(), eq(0));
+}
+
+#[test]
+fn test_message_opt_set() {
+    let mut msg = TestAllTypes::new();
+    let submsg = TestAllTypes_::NestedMessage::new();
+
+    assert_that!(msg.optional_nested_message_opt().is_set(), eq(false));
+    msg.optional_nested_message_mut().set(submsg);
+    assert_that!(msg.optional_nested_message_opt().is_set(), eq(true));
+
+    msg.optional_nested_message_mut().clear();
+    assert_that!(msg.optional_nested_message_mut().is_set(), eq(false));
+}
+
+#[test]
+fn test_setting_submsg() {
+    let mut msg = TestAllTypes::new();
+    let submsg = TestAllTypes_::NestedMessage::new();
+
+    let fieldentry = msg.optional_nested_message_mut();
+    assert_that!(fieldentry.is_set(), eq(false));
+
+    fieldentry.or_default().set(submsg);
+    // confirm that invoking .set on a submsg indeed flips the set bit
+    assert_that!(msg.optional_nested_message_mut().is_set(), eq(true));
+
+    msg.optional_nested_message_mut().clear();
+    assert_that!(msg.optional_nested_message_mut().is_set(), eq(false));
+}
+
+#[test]
+fn test_msg_or_default() {
+    let mut msg = TestAllTypes::new();
+    assert_that!(msg.optional_nested_message_mut().is_set(), eq(false));
+
+    let _ = msg.optional_nested_message_mut().or_default();
+    // confirm that that or_default makes the field Present
+    assert_that!(msg.optional_nested_message_mut().is_set(), eq(true));
+
+    msg.optional_nested_message_mut().clear();
+    assert_that!(msg.optional_nested_message_mut().is_set(), eq(false));
 }
 
 #[test]

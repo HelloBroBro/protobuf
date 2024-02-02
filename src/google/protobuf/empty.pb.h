@@ -166,15 +166,21 @@ class PROTOBUF_EXPORT Empty final : public ::google::protobuf::internal::ZeroFie
       : Empty(arena) {
     *this = ::std::move(from);
   }
+  const ::google::protobuf::internal::ZeroFieldsBase::ClassData* GetClassData() const final;
 
  public:
-  ::google::protobuf::Metadata GetMetadata() const final;
+  ::google::protobuf::Metadata GetMetadata() const;
   // nested types ----------------------------------------------------
 
   // accessors -------------------------------------------------------
   // @@protoc_insertion_point(class_scope:google.protobuf.Empty)
  private:
   class _Internal;
+  friend class ::google::protobuf::internal::TcParser;
+  static const ::google::protobuf::internal::TcParseTable<
+      0, 0, 0,
+      0, 2>
+      _table_;
   friend class ::google::protobuf::MessageLite;
   friend class ::google::protobuf::Arena;
   template <typename T>

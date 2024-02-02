@@ -349,7 +349,7 @@ void __asan_unpoison_memory_region(void const volatile *addr, size_t size);
 
 // Must be last.
 
-#define _kUpb_Status_MaxMessage 127
+#define _kUpb_Status_MaxMessage 511
 
 typedef struct {
   bool ok;
@@ -556,7 +556,7 @@ UPB_INLINE bool upb_StringView_IsEqual(upb_StringView a, upb_StringView b) {
 }
 
 // LINT.ThenChange(
-//  GoogleInternalName0,
+//  GoogleInternalName1,
 //  //depot/google3/third_party/upb/bits/golang/accessor.go:map_go_string,
 //  //depot/google3/third_party/upb/bits/typescript/string_view.ts
 // )
@@ -835,7 +835,8 @@ UPB_API_INLINE void upb_Arena_ShrinkLast(upb_Arena* a, void* ptr,
 extern "C" {
 #endif
 
-// LINT.IfChange(struct_definition)
+// LINT.IfChange(upb_Array)
+
 // Our internal representation for repeated fields.
 struct upb_Array {
   // This is a tagged pointer. Bits #0 and #1 encode the elem size as follows:
@@ -942,9 +943,7 @@ UPB_INLINE size_t UPB_PRIVATE(_upb_Array_Size)(const struct upb_Array* arr) {
   return arr->UPB_ONLYBITS(size);
 }
 
-// LINT.ThenChange(
-//  GoogleInternalName1,
-//)
+// LINT.ThenChange(GoogleInternalName0)
 
 #ifdef __cplusplus
 } /* extern "C" */
@@ -1844,85 +1843,8 @@ UPB_INLINE uint64_t upb_BigEndian64(uint64_t val) {
 #ifndef UPB_MESSAGE_INTERNAL_EXTENSION_H_
 #define UPB_MESSAGE_INTERNAL_EXTENSION_H_
 
+#include <stddef.h>
 
-/*
-** Our memory representation for parsing tables and messages themselves.
-** Functions in this file are used by generated code and possibly reflection.
-**
-** The definitions in this file are internal to upb.
-**/
-
-#ifndef UPB_MESSAGE_INTERNAL_MESSAGE_H_
-#define UPB_MESSAGE_INTERNAL_MESSAGE_H_
-
-#include <stdlib.h>
-#include <string.h>
-
-
-// Must be last.
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-extern const float kUpb_FltInfinity;
-extern const double kUpb_Infinity;
-extern const double kUpb_NaN;
-
-// Internal members of a upb_Message that track unknown fields and/or
-// extensions. We can change this without breaking binary compatibility.
-
-typedef struct upb_Message_Internal {
-  // Total size of this structure, including the data that follows.
-  // Must be aligned to 8, which is alignof(upb_Extension)
-  uint32_t size;
-
-  /* Offsets relative to the beginning of this structure.
-   *
-   * Unknown data grows forward from the beginning to unknown_end.
-   * Extension data grows backward from size to ext_begin.
-   * When the two meet, we're out of data and have to realloc.
-   *
-   * If we imagine that the final member of this struct is:
-   *   char data[size - overhead];  // overhead = sizeof(upb_Message_Internal)
-   *
-   * Then we have:
-   *   unknown data: data[0 .. (unknown_end - overhead)]
-   *   extensions data: data[(ext_begin - overhead) .. (size - overhead)] */
-  uint32_t unknown_end;
-  uint32_t ext_begin;
-  // Data follows, as if there were an array:
-  //   char data[size - sizeof(upb_Message_Internal)];
-} upb_Message_Internal;
-
-// Inline version upb_Message_New(), for internal use.
-UPB_INLINE struct upb_Message* _upb_Message_New(const upb_MiniTable* m,
-                                                upb_Arena* a) {
-  const int size = m->UPB_PRIVATE(size);
-  struct upb_Message* msg = (struct upb_Message*)upb_Arena_Malloc(a, size);
-  if (UPB_UNLIKELY(!msg)) return NULL;
-  memset(msg, 0, size);
-  return msg;
-}
-
-// Discards the unknown fields for this message only.
-void _upb_Message_DiscardUnknown_shallow(struct upb_Message* msg);
-
-// Adds unknown data (serialized protobuf data) to the given message.
-// The data is copied into the message instance.
-bool UPB_PRIVATE(_upb_Message_AddUnknown)(struct upb_Message* msg,
-                                          const char* data, size_t len,
-                                          upb_Arena* arena);
-
-bool UPB_PRIVATE(_upb_Message_Realloc)(struct upb_Message* msg, size_t need,
-                                       upb_Arena* arena);
-
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
-
-
-#endif /* UPB_MESSAGE_INTERNAL_MESSAGE_H_ */
 
 #ifndef UPB_MINI_TABLE_EXTENSION_H_
 #define UPB_MINI_TABLE_EXTENSION_H_
@@ -2025,11 +1947,7 @@ UPB_API_INLINE void upb_MiniTableExtension_SetSubMessage(
 // the most common extension type.
 typedef struct {
   const upb_MiniTableExtension* ext;
-  union {
-    upb_StringView str;
-    void* ptr;
-    char scalar_data[8];
-  } data;
+  upb_MessageValue data;
 } upb_Extension;
 
 #ifdef __cplusplus
@@ -2519,6 +2437,85 @@ struct upb_Map* _upb_Map_New(upb_Arena* a, size_t key_size, size_t value_size);
 
 
 #endif /* UPB_MESSAGE_INTERNAL_MAP_H_ */
+
+/*
+** Our memory representation for parsing tables and messages themselves.
+** Functions in this file are used by generated code and possibly reflection.
+**
+** The definitions in this file are internal to upb.
+**/
+
+#ifndef UPB_MESSAGE_INTERNAL_MESSAGE_H_
+#define UPB_MESSAGE_INTERNAL_MESSAGE_H_
+
+#include <stdlib.h>
+#include <string.h>
+
+
+// Must be last.
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+extern const float kUpb_FltInfinity;
+extern const double kUpb_Infinity;
+extern const double kUpb_NaN;
+
+// Internal members of a upb_Message that track unknown fields and/or
+// extensions. We can change this without breaking binary compatibility.
+
+typedef struct upb_Message_Internal {
+  // Total size of this structure, including the data that follows.
+  // Must be aligned to 8, which is alignof(upb_Extension)
+  uint32_t size;
+
+  /* Offsets relative to the beginning of this structure.
+   *
+   * Unknown data grows forward from the beginning to unknown_end.
+   * Extension data grows backward from size to ext_begin.
+   * When the two meet, we're out of data and have to realloc.
+   *
+   * If we imagine that the final member of this struct is:
+   *   char data[size - overhead];  // overhead = sizeof(upb_Message_Internal)
+   *
+   * Then we have:
+   *   unknown data: data[0 .. (unknown_end - overhead)]
+   *   extensions data: data[(ext_begin - overhead) .. (size - overhead)] */
+  uint32_t unknown_end;
+  uint32_t ext_begin;
+  // Data follows, as if there were an array:
+  //   char data[size - sizeof(upb_Message_Internal)];
+} upb_Message_Internal;
+
+// Inline version upb_Message_New(), for internal use.
+UPB_INLINE struct upb_Message* _upb_Message_New(const upb_MiniTable* m,
+                                                upb_Arena* a) {
+  const int size = m->UPB_PRIVATE(size);
+  struct upb_Message* msg = (struct upb_Message*)upb_Arena_Malloc(a, size);
+  if (UPB_UNLIKELY(!msg)) return NULL;
+  memset(msg, 0, size);
+  return msg;
+}
+
+// Discards the unknown fields for this message only.
+void _upb_Message_DiscardUnknown_shallow(struct upb_Message* msg);
+
+// Adds unknown data (serialized protobuf data) to the given message.
+// The data is copied into the message instance.
+bool UPB_PRIVATE(_upb_Message_AddUnknown)(struct upb_Message* msg,
+                                          const char* data, size_t len,
+                                          upb_Arena* arena);
+
+bool UPB_PRIVATE(_upb_Message_Realloc)(struct upb_Message* msg, size_t need,
+                                       upb_Arena* arena);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
+
+#endif /* UPB_MESSAGE_INTERNAL_MESSAGE_H_ */
 
 #ifndef UPB_MINI_TABLE_INTERNAL_TAGGED_PTR_H_
 #define UPB_MINI_TABLE_INTERNAL_TAGGED_PTR_H_
@@ -3499,16 +3496,15 @@ UPB_API_INLINE upb_TaggedMessagePtr upb_Message_GetTaggedMessagePtr(
 }
 
 UPB_API_INLINE const upb_Message* upb_Message_GetMessage(
-    const upb_Message* msg, const upb_MiniTableField* field,
-    upb_Message* default_val) {
+    const upb_Message* msg, const upb_MiniTableField* field) {
   upb_TaggedMessagePtr tagged =
-      upb_Message_GetTaggedMessagePtr(msg, field, default_val);
+      upb_Message_GetTaggedMessagePtr(msg, field, NULL);
   return upb_TaggedMessagePtr_GetNonEmptyMessage(tagged);
 }
 
 UPB_API_INLINE upb_Message* upb_Message_GetMutableMessage(
     upb_Message* msg, const upb_MiniTableField* field) {
-  return (upb_Message*)upb_Message_GetMessage(msg, field, NULL);
+  return (upb_Message*)upb_Message_GetMessage(msg, field);
 }
 
 // For internal use only; users cannot set tagged messages because only the
