@@ -270,21 +270,6 @@ impl<'msg, T: ?Sized> Debug for RepeatedIter<'msg, T> {
     }
 }
 
-/// An iterator over the mutators inside of a [`Mut<Repeated<T>>`](RepeatedMut).
-pub struct RepeatedIterMut<'msg, T: ?Sized> {
-    mutator: RepeatedMut<'msg, T>,
-    current_index: usize,
-}
-
-impl<'msg, T: ?Sized> Debug for RepeatedIterMut<'msg, T> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("RepeatedIterMut")
-            .field("mutator", &self.mutator)
-            .field("current_index", &self.current_index)
-            .finish()
-    }
-}
-
 /// A `repeated` field of `T`, used as the owned target for `Proxied`.
 ///
 /// Users will generally write [`View<Repeated<T>>`](RepeatedView) or
@@ -396,7 +381,6 @@ where
     }
 }
 
-// TODO: impl ExactSizeIterator
 impl<'msg, T> iter::Iterator for RepeatedIter<'msg, T>
 where
     T: ProxiedInRepeated + ?Sized + 'msg,
@@ -410,14 +394,20 @@ where
         }
         val
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = self.len();
+        (len, Some(len))
+    }
 }
 
 impl<'msg, T: ?Sized + ProxiedInRepeated> ExactSizeIterator for RepeatedIter<'msg, T> {
     fn len(&self) -> usize {
-        self.view.len()
+        self.view.len() - self.current_index
     }
 }
 
+// TODO: impl DoubleEndedIterator
 impl<'msg, T: ?Sized + ProxiedInRepeated> FusedIterator for RepeatedIter<'msg, T> {}
 
 impl<'msg, T> iter::IntoIterator for RepeatedView<'msg, T>
