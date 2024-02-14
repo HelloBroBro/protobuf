@@ -16,6 +16,7 @@
 #include "google/protobuf/has_bits.h"
 #include "google/protobuf/internal_visibility.h"
 #include "google/protobuf/unittest.pb.h"
+#include "google/protobuf/unittest_import.pb.h"
 
 #define MESSAGE_TEST_NAME MessageTest
 #define MESSAGE_FACTORY_TEST_NAME MessageFactoryTest
@@ -27,4 +28,5 @@
 // clang-format off
 #include "google/protobuf/test_util.inc"
 #include "google/protobuf/message_unittest.inc"
+#include "google/protobuf/message_unittest_legacy_apis.inc"
 // clang-format on
