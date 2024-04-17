@@ -12,8 +12,8 @@
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "google/protobuf/editions/defaults_test_embedded.h"
-#include "google/protobuf/editions/defaults_test_embedded_base64.h"
+#include "editions/defaults_test_embedded.h"
+#include "editions/defaults_test_embedded_base64.h"
 #include "google/protobuf/unittest_features.pb.h"
 #include "google/protobuf/stubs/status_macros.h"
 
@@ -29,7 +29,7 @@ namespace {
 absl::StatusOr<FeatureSetDefaults> ReadDefaults(absl::string_view name) {
   auto runfiles = absl::WrapUnique(bazel::tools::cpp::runfiles::Runfiles::CreateForTest());
   std::string file = runfiles->Rlocation(absl::StrCat(
-      "com_google_protobuf/src/google/protobuf/editions/",
+      "com_google_protobuf/editions/",
       name, ".binpb"));
   std::string data;
   RETURN_IF_ERROR(File::GetContents(file, &data, true));
@@ -50,11 +50,13 @@ TEST(DefaultsTest, Check2023) {
   EXPECT_EQ(defaults->defaults()[0].edition(), EDITION_PROTO2);
   EXPECT_EQ(defaults->defaults()[1].edition(), EDITION_PROTO3);
   EXPECT_EQ(defaults->defaults()[2].edition(), EDITION_2023);
-  EXPECT_EQ(defaults->defaults()[2].features().field_presence(),
+  EXPECT_EQ(defaults->defaults()[2].overridable_features().field_presence(),
             FeatureSet::EXPLICIT);
-  EXPECT_EQ(
-      defaults->defaults()[2].features().GetExtension(pb::test).file_feature(),
-      pb::VALUE3);
+  EXPECT_EQ(defaults->defaults()[2]
+                .overridable_features()
+                .GetExtension(pb::test)
+                .file_feature(),
+            pb::VALUE3);
 }
 
 TEST(DefaultsTest, CheckFuture) {
@@ -67,23 +69,29 @@ TEST(DefaultsTest, CheckFuture) {
   EXPECT_EQ(defaults->defaults()[0].edition(), EDITION_PROTO2);
   EXPECT_EQ(defaults->defaults()[1].edition(), EDITION_PROTO3);
   EXPECT_EQ(defaults->defaults()[2].edition(), EDITION_2023);
-  EXPECT_EQ(defaults->defaults()[2].features().field_presence(),
+  EXPECT_EQ(defaults->defaults()[2].overridable_features().field_presence(),
             FeatureSet::EXPLICIT);
-  EXPECT_EQ(
-      defaults->defaults()[2].features().GetExtension(pb::test).file_feature(),
-      pb::VALUE3);
+  EXPECT_EQ(defaults->defaults()[2]
+                .overridable_features()
+                .GetExtension(pb::test)
+                .file_feature(),
+            pb::VALUE3);
   EXPECT_EQ(defaults->defaults()[3].edition(), EDITION_2024);
-  EXPECT_EQ(defaults->defaults()[3].features().field_presence(),
+  EXPECT_EQ(defaults->defaults()[3].overridable_features().field_presence(),
             FeatureSet::EXPLICIT);
-  EXPECT_EQ(
-      defaults->defaults()[3].features().GetExtension(pb::test).file_feature(),
-      pb::VALUE3);
+  EXPECT_EQ(defaults->defaults()[3]
+                .overridable_features()
+                .GetExtension(pb::test)
+                .file_feature(),
+            pb::VALUE3);
   EXPECT_EQ(defaults->defaults()[4].edition(), EDITION_99997_TEST_ONLY);
-  EXPECT_EQ(defaults->defaults()[4].features().field_presence(),
+  EXPECT_EQ(defaults->defaults()[4].overridable_features().field_presence(),
             FeatureSet::EXPLICIT);
-  EXPECT_EQ(
-      defaults->defaults()[4].features().GetExtension(pb::test).file_feature(),
-      pb::VALUE4);
+  EXPECT_EQ(defaults->defaults()[4]
+                .overridable_features()
+                .GetExtension(pb::test)
+                .file_feature(),
+            pb::VALUE4);
 }
 
 TEST(DefaultsTest, CheckFarFuture) {
@@ -96,29 +104,37 @@ TEST(DefaultsTest, CheckFarFuture) {
   EXPECT_EQ(defaults->defaults()[0].edition(), EDITION_PROTO2);
   EXPECT_EQ(defaults->defaults()[1].edition(), EDITION_PROTO3);
   EXPECT_EQ(defaults->defaults()[2].edition(), EDITION_2023);
-  EXPECT_EQ(defaults->defaults()[2].features().field_presence(),
+  EXPECT_EQ(defaults->defaults()[2].overridable_features().field_presence(),
             FeatureSet::EXPLICIT);
-  EXPECT_EQ(
-      defaults->defaults()[2].features().GetExtension(pb::test).file_feature(),
-      pb::VALUE3);
+  EXPECT_EQ(defaults->defaults()[2]
+                .overridable_features()
+                .GetExtension(pb::test)
+                .file_feature(),
+            pb::VALUE3);
   EXPECT_EQ(defaults->defaults()[3].edition(), EDITION_2024);
-  EXPECT_EQ(defaults->defaults()[3].features().field_presence(),
+  EXPECT_EQ(defaults->defaults()[3].overridable_features().field_presence(),
             FeatureSet::EXPLICIT);
-  EXPECT_EQ(
-      defaults->defaults()[3].features().GetExtension(pb::test).file_feature(),
-      pb::VALUE3);
+  EXPECT_EQ(defaults->defaults()[3]
+                .overridable_features()
+                .GetExtension(pb::test)
+                .file_feature(),
+            pb::VALUE3);
   EXPECT_EQ(defaults->defaults()[4].edition(), EDITION_99997_TEST_ONLY);
-  EXPECT_EQ(defaults->defaults()[4].features().field_presence(),
+  EXPECT_EQ(defaults->defaults()[4].overridable_features().field_presence(),
             FeatureSet::EXPLICIT);
-  EXPECT_EQ(
-      defaults->defaults()[4].features().GetExtension(pb::test).file_feature(),
-      pb::VALUE4);
+  EXPECT_EQ(defaults->defaults()[4]
+                .overridable_features()
+                .GetExtension(pb::test)
+                .file_feature(),
+            pb::VALUE4);
   EXPECT_EQ(defaults->defaults()[5].edition(), EDITION_99998_TEST_ONLY);
-  EXPECT_EQ(defaults->defaults()[5].features().field_presence(),
+  EXPECT_EQ(defaults->defaults()[5].overridable_features().field_presence(),
             FeatureSet::EXPLICIT);
-  EXPECT_EQ(
-      defaults->defaults()[5].features().GetExtension(pb::test).file_feature(),
-      pb::VALUE5);
+  EXPECT_EQ(defaults->defaults()[5]
+                .overridable_features()
+                .GetExtension(pb::test)
+                .file_feature(),
+            pb::VALUE5);
 }
 
 TEST(DefaultsTest, Embedded) {
@@ -133,11 +149,13 @@ TEST(DefaultsTest, Embedded) {
   EXPECT_EQ(defaults.defaults()[0].edition(), EDITION_PROTO2);
   EXPECT_EQ(defaults.defaults()[1].edition(), EDITION_PROTO3);
   EXPECT_EQ(defaults.defaults()[2].edition(), EDITION_2023);
-  EXPECT_EQ(defaults.defaults()[2].features().field_presence(),
+  EXPECT_EQ(defaults.defaults()[2].overridable_features().field_presence(),
             FeatureSet::EXPLICIT);
-  EXPECT_EQ(
-      defaults.defaults()[2].features().GetExtension(pb::test).file_feature(),
-      pb::VALUE3);
+  EXPECT_EQ(defaults.defaults()[2]
+                .overridable_features()
+                .GetExtension(pb::test)
+                .file_feature(),
+            pb::VALUE3);
 }
 
 TEST(DefaultsTest, EmbeddedBase64) {
@@ -155,11 +173,13 @@ TEST(DefaultsTest, EmbeddedBase64) {
   EXPECT_EQ(defaults.defaults()[0].edition(), EDITION_PROTO2);
   EXPECT_EQ(defaults.defaults()[1].edition(), EDITION_PROTO3);
   EXPECT_EQ(defaults.defaults()[2].edition(), EDITION_2023);
-  EXPECT_EQ(defaults.defaults()[2].features().field_presence(),
+  EXPECT_EQ(defaults.defaults()[2].overridable_features().field_presence(),
             FeatureSet::EXPLICIT);
-  EXPECT_EQ(
-      defaults.defaults()[2].features().GetExtension(pb::test).file_feature(),
-      pb::VALUE3);
+  EXPECT_EQ(defaults.defaults()[2]
+                .overridable_features()
+                .GetExtension(pb::test)
+                .file_feature(),
+            pb::VALUE3);
 }
 
 }  // namespace

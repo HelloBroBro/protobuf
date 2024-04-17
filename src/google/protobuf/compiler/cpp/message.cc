@@ -61,7 +61,6 @@ namespace {
 using ::google::protobuf::internal::WireFormat;
 using ::google::protobuf::internal::WireFormatLite;
 using ::google::protobuf::internal::cpp::HasHasbit;
-using ::google::protobuf::internal::cpp::Utf8CheckMode;
 using Semantic = ::google::protobuf::io::AnnotationCollector::Semantic;
 using Sub = ::google::protobuf::io::Printer::Sub;
 
@@ -75,7 +74,7 @@ std::string ConditionalToCheckBitmasks(
     const std::vector<uint32_t>& masks, bool return_success = true,
     absl::string_view has_bits_var = "_impl_._has_bits_") {
   std::vector<std::string> parts;
-  for (int i = 0; i < masks.size(); i++) {
+  for (size_t i = 0; i < masks.size(); ++i) {
     if (masks[i] == 0) continue;
     std::string m = absl::StrCat("0x", absl::Hex(masks[i], absl::kZeroPad8));
     // Each xor evaluates to 0 if the expected bits are present.
@@ -126,7 +125,7 @@ struct FieldOrderingByNumber {
 std::vector<const FieldDescriptor*> SortFieldsByNumber(
     const Descriptor* descriptor) {
   std::vector<const FieldDescriptor*> fields(descriptor->field_count());
-  for (int i = 0; i < descriptor->field_count(); i++) {
+  for (int i = 0; i < descriptor->field_count(); ++i) {
     fields[i] = descriptor->field(i);
   }
   std::sort(fields.begin(), fields.end(), FieldOrderingByNumber());
@@ -380,7 +379,7 @@ uint32_t GenChunkMask(const std::vector<const FieldDescriptor*>& fields,
     ABSL_CHECK_EQ(first_index_offset, index / 32);
     chunk_mask |= static_cast<uint32_t>(1) << (index % 32);
   }
-  ABSL_CHECK_NE(0, chunk_mask);
+  ABSL_CHECK_NE(0u, chunk_mask);
   return chunk_mask;
 }
 
@@ -564,7 +563,7 @@ MessageGenerator::MessageGenerator(
   field_generators_.Build(options_, scc_analyzer_, has_bit_indices_,
                           inlined_string_indices_);
 
-  for (int i = 0; i < descriptor->field_count(); i++) {
+  for (int i = 0; i < descriptor->field_count(); ++i) {
     if (descriptor->field(i)->is_required()) {
       ++num_required_fields_;
     }
@@ -612,12 +611,12 @@ int MessageGenerator::HasWordIndex(const FieldDescriptor* field) const {
 void MessageGenerator::AddGenerators(
     std::vector<std::unique_ptr<EnumGenerator>>* enum_generators,
     std::vector<std::unique_ptr<ExtensionGenerator>>* extension_generators) {
-  for (int i = 0; i < descriptor_->enum_type_count(); i++) {
+  for (int i = 0; i < descriptor_->enum_type_count(); ++i) {
     enum_generators->emplace_back(
         std::make_unique<EnumGenerator>(descriptor_->enum_type(i), options_));
     enum_generators_.push_back(enum_generators->back().get());
   }
-  for (int i = 0; i < descriptor_->extension_count(); i++) {
+  for (int i = 0; i < descriptor_->extension_count(); ++i) {
     extension_generators->emplace_back(std::make_unique<ExtensionGenerator>(
         descriptor_->extension(i), options_, scc_analyzer_));
     extension_generators_.push_back(extension_generators->back().get());
@@ -1726,11 +1725,30 @@ void MessageGenerator::GenerateClassDefinition(io::Printer* p) {
             )cc");
           }
 
+          if (NeedsIsInitialized()) {
+            p->Emit(R"cc(
+              bool IsInitialized() const {
+                $WeakDescriptorSelfPin$;
+                return IsInitializedImpl(*this);
+              }
+
+              private:
+              static bool IsInitializedImpl(const MessageLite& msg);
+
+              public:
+            )cc");
+          } else {
+            p->Emit(R"cc(
+              bool IsInitialized() const {
+                $WeakDescriptorSelfPin$;
+                return true;
+              }
+            )cc");
+          }
+
           if (!HasSimpleBaseClass(descriptor_, options_)) {
             p->Emit(R"cc(
               ABSL_ATTRIBUTE_REINITIALIZES void Clear() final;
-              bool IsInitialized() const final;
-
               ::size_t ByteSizeLong() const final;
               $uint8$* _InternalSerialize(
                   $uint8$* target,
@@ -1815,7 +1833,7 @@ void MessageGenerator::GenerateClassDefinition(io::Printer* p) {
         [&] {
           // Import all nested message classes into this class's scope with
           // typedefs.
-          for (int i = 0; i < descriptor_->nested_type_count(); i++) {
+          for (int i = 0; i < descriptor_->nested_type_count(); ++i) {
             const Descriptor* nested_type = descriptor_->nested_type(i);
             if (!IsMapEntryMessage(nested_type)) {
               p->Emit(
@@ -1835,7 +1853,7 @@ void MessageGenerator::GenerateClassDefinition(io::Printer* p) {
         [&] {
           // Import all nested enums and their values into this class's
           // scope with typedefs and constants.
-          for (int i = 0; i < descriptor_->enum_type_count(); i++) {
+          for (int i = 0; i < descriptor_->enum_type_count(); ++i) {
             enum_generators_[i]->GenerateSymbolImports(p);
           }
         }},
@@ -1847,7 +1865,7 @@ void MessageGenerator::GenerateClassDefinition(io::Printer* p) {
        {"decl_extension_ids",
         [&] {
           // Declare extension identifiers.
-          for (int i = 0; i < descriptor_->extension_count(); i++) {
+          for (int i = 0; i < descriptor_->extension_count(); ++i) {
             extension_generators_[i]->GenerateDeclaration(p);
           }
         }},
@@ -2312,7 +2330,7 @@ std::pair<size_t, size_t> MessageGenerator::GenerateOffsets(io::Printer* p) {
              ShouldSplit(field, options_) ? "::Impl_::Split" : "",
              ShouldSplit(field, options_)
                  ? absl::StrCat(FieldName(field), "_")
-                 : FieldMemberName(field, /*cold=*/false));
+                 : FieldMemberName(field, /*split=*/false));
     }
 
     // Some information about a field is in the pdproto profile. The profile is
@@ -2349,7 +2367,7 @@ std::pair<size_t, size_t> MessageGenerator::GenerateOffsets(io::Printer* p) {
         "1,\n");
   } else if (!has_bit_indices_.empty()) {
     entries += has_bit_indices_.size();
-    for (int i = 0; i < has_bit_indices_.size(); i++) {
+    for (size_t i = 0; i < has_bit_indices_.size(); ++i) {
       const std::string index =
           has_bit_indices_[i] >= 0 ? absl::StrCat(has_bit_indices_[i]) : "~0u";
       format("$1$,\n", index);
@@ -2531,7 +2549,7 @@ void MessageGenerator::GenerateImplMemberInit(io::Printer* p,
       separator();
       if (init_type == InitType::kArenaCopy) {
         auto cases = [&] {
-          for (int i = 0; i < count; i++) {
+          for (int i = 0; i < count; ++i) {
             p->Emit({{"index", i}, {"comma", i ? ", " : ""}},
                     "$comma$from._oneof_case_[$index$]");
           }
@@ -3389,7 +3407,7 @@ void MessageGenerator::GenerateOneofClear(io::Printer* p) {
     format(
         "}\n"
         "\n");
-    i++;
+    ++i;
   }
 }
 
@@ -3420,7 +3438,7 @@ void MessageGenerator::GenerateSwap(io::Printer* p) {
     format("_internal_metadata_.InternalSwap(&other->_internal_metadata_);\n");
 
     if (!has_bit_indices_.empty()) {
-      for (int i = 0; i < HasBitsSize(); ++i) {
+      for (size_t i = 0; i < HasBitsSize(); ++i) {
         format("swap($has_bits$[$1$], other->$has_bits$[$1$]);\n", i);
       }
     }
@@ -3446,9 +3464,9 @@ void MessageGenerator::GenerateSwap(io::Printer* p) {
         // Use a memswap, then skip run_length fields.
         const size_t run_length = it->second;
         const std::string first_field_name =
-            FieldMemberName(field, /*cold=*/false);
+            FieldMemberName(field, /*split=*/false);
         const std::string last_field_name = FieldMemberName(
-            optimized_order_[i + run_length - 1], /*cold=*/false);
+            optimized_order_[i + run_length - 1], /*split=*/false);
 
         auto v = p->WithVars({
             {"first", first_field_name},
@@ -3477,7 +3495,7 @@ void MessageGenerator::GenerateSwap(io::Printer* p) {
       format("swap(_impl_.$1$_, other->_impl_.$1$_);\n", oneof->name());
     }
 
-    for (int i = 0; i < descriptor_->real_oneof_decl_count(); i++) {
+    for (int i = 0; i < descriptor_->real_oneof_decl_count(); ++i) {
       format("swap($oneof_case$[$1$], other->$oneof_case$[$1$]);\n", i);
     }
 
@@ -3515,6 +3533,17 @@ void MessageGenerator::GenerateClassData(io::Printer* p) {
       )cc");
     }
   };
+  const auto is_initialized = [&] {
+    if (NeedsIsInitialized()) {
+      p->Emit(R"cc(
+        $classname$::IsInitializedImpl,
+      )cc");
+    } else {
+      p->Emit(R"cc(
+        nullptr,  // IsInitialized
+      )cc");
+    }
+  };
 
   if (HasDescriptorMethods(descriptor_->file(), options_)) {
     const auto pin_weak_descriptor = [&] {
@@ -3541,6 +3570,7 @@ void MessageGenerator::GenerateClassData(io::Printer* p) {
     p->Emit(
         {
             {"on_demand_register_arena_dtor", on_demand_register_arena_dtor},
+            {"is_initialized", is_initialized},
             {"pin_weak_descriptor", pin_weak_descriptor},
             {"table",
              [&] {
@@ -3577,6 +3607,7 @@ void MessageGenerator::GenerateClassData(io::Printer* p) {
                     {
                         $table$,
                         $on_demand_register_arena_dtor$,
+                        $is_initialized$,
                         PROTOBUF_FIELD_OFFSET($classname$, $cached_size$),
                         false,
                     },
@@ -3595,6 +3626,7 @@ void MessageGenerator::GenerateClassData(io::Printer* p) {
         {
             {"type_size", descriptor_->full_name().size() + 1},
             {"on_demand_register_arena_dtor", on_demand_register_arena_dtor},
+            {"is_initialized", is_initialized},
         },
         R"cc(
           const ::$proto_ns$::MessageLite::ClassData*
@@ -3604,6 +3636,7 @@ void MessageGenerator::GenerateClassData(io::Printer* p) {
                     {
                         &_table_.header,
                         $on_demand_register_arena_dtor$,
+                        $is_initialized$,
                         PROTOBUF_FIELD_OFFSET($classname$, $cached_size$),
                         true,
                     },
@@ -4247,11 +4280,11 @@ void MessageGenerator::GenerateSerializeWithCachedSizesBody(io::Printer* p) {
              LazySerializerEmitter e(this, p);
              LazyExtensionRangeEmitter re(this, p);
              LargestWeakFieldHolder largest_weak_field;
-             int i, j;
+             size_t i, j;
              for (i = 0, j = 0;
                   i < ordered_fields.size() || j < sorted_extensions.size();) {
                if ((j == sorted_extensions.size()) ||
-                   (i < descriptor_->field_count() &&
+                   (i < static_cast<size_t>(descriptor_->field_count()) &&
                     ordered_fields[i]->number() <
                         sorted_extensions[j]->start_number())) {
                  const FieldDescriptor* field = ordered_fields[i++];
@@ -4631,8 +4664,27 @@ void MessageGenerator::GenerateByteSize(io::Printer* p) {
   format("}\n");
 }
 
+bool MessageGenerator::NeedsIsInitialized() {
+  if (HasSimpleBaseClass(descriptor_, options_)) return false;
+  if (descriptor_->extension_range_count() != 0) return true;
+  if (num_required_fields_ != 0) return true;
+
+  for (const auto* field : optimized_order_) {
+    if (field_generators_.get(field).NeedsIsInitialized()) return true;
+  }
+  if (num_weak_fields_ != 0) return true;
+
+  for (const auto* oneof : OneOfRange(descriptor_)) {
+    for (const auto* field : FieldRange(oneof)) {
+      if (field_generators_.get(field).NeedsIsInitialized()) return true;
+    }
+  }
+
+  return false;
+}
+
 void MessageGenerator::GenerateIsInitialized(io::Printer* p) {
-  if (HasSimpleBaseClass(descriptor_, options_)) return;
+  if (!NeedsIsInitialized()) return;
 
   auto has_required_field = [&](const auto* oneof) {
     for (const auto* field : FieldRange(oneof)) {
@@ -4651,7 +4703,8 @@ void MessageGenerator::GenerateIsInitialized(io::Printer* p) {
            [&] {
              if (descriptor_->extension_range_count() == 0) return;
              p->Emit(R"cc(
-               if (!$extensions$.IsInitialized(internal_default_instance())) {
+               if (!this_.$extensions$.IsInitialized(
+                       internal_default_instance())) {
                  return false;
                }
              )cc");
@@ -4660,7 +4713,7 @@ void MessageGenerator::GenerateIsInitialized(io::Printer* p) {
            [&] {
              if (num_required_fields_ == 0) return;
              p->Emit(R"cc(
-               if (_Internal::MissingRequiredFields($has_bits$)) {
+               if (_Internal::MissingRequiredFields(this_.$has_bits$)) {
                  return false;
                }
              )cc");
@@ -4668,14 +4721,27 @@ void MessageGenerator::GenerateIsInitialized(io::Printer* p) {
           {"test_ordinary_fields",
            [&] {
              for (const auto* field : optimized_order_) {
-               field_generators_.get(field).GenerateIsInitialized(p);
+               auto& f = field_generators_.get(field);
+               // XXX REMOVE? XXX
+               const auto needs_verifier =
+                   !f.NeedsIsInitialized()
+                       ? absl::make_optional(p->WithSubstitutionListener(
+                             [&](auto label, auto loc) {
+                               ABSL_LOG(FATAL)
+                                   << "Field generated output but is marked as "
+                                      "!NeedsIsInitialized"
+                                   << field->full_name();
+                             }))
+                       : absl::nullopt;
+               f.GenerateIsInitialized(p);
              }
            }},
           {"test_weak_fields",
            [&] {
              if (num_weak_fields_ == 0) return;
              p->Emit(R"cc(
-               if (!$weak_field_map$.IsInitialized()) return false;
+               if (!this_.$weak_field_map$.IsInitialized())
+                 return false;
              )cc");
            }},
           {"test_oneof_fields",
@@ -4703,7 +4769,7 @@ void MessageGenerator::GenerateIsInitialized(io::Printer* p) {
                            }
                          }}},
                        R"cc(
-                         switch ($name$_case()) {
+                         switch (this_.$name$_case()) {
                            $cases$;
                            case $NAME$_NOT_SET: {
                              break;
@@ -4714,8 +4780,9 @@ void MessageGenerator::GenerateIsInitialized(io::Printer* p) {
            }},
       },
       R"cc(
-        PROTOBUF_NOINLINE bool $classname$::IsInitialized() const {
-          $WeakDescriptorSelfPin$;
+        PROTOBUF_NOINLINE bool $classname$::IsInitializedImpl(
+            const MessageLite& msg) {
+          auto& this_ = static_cast<const $classname$&>(msg);
           $test_extensions$;
           $test_required_fields$;
           $test_ordinary_fields$;
