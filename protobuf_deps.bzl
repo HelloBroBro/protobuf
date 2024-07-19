@@ -51,11 +51,11 @@ def protobuf_deps():
     if not native.existing_rule("bazel_skylib"):
         http_archive(
             name = "bazel_skylib",
+            sha256 = "d00f1389ee20b60018e92644e0948e16e350a7707219e7a390fb0a99b6ec9262",
             urls = [
-                "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.3.0/bazel-skylib-1.3.0.tar.gz",
-                "https://github.com/bazelbuild/bazel-skylib/releases/download/1.3.0/bazel-skylib-1.3.0.tar.gz",
+                "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.7.0/bazel-skylib-1.7.0.tar.gz",
+                "https://github.com/bazelbuild/bazel-skylib/releases/download/1.7.0/bazel-skylib-1.7.0.tar.gz",
             ],
-            sha256 = "74d544d96f4a5bb630d465ca8bbcfe231e3594e5aae57e1edbf17a6eb3ca2506",
         )
 
     if not native.existing_rule("com_google_absl"):
@@ -84,8 +84,8 @@ def protobuf_deps():
         _github_archive(
             name = "jsoncpp",
             repo = "https://github.com/open-source-parsers/jsoncpp",
-            commit = "9059f5cad030ba11d37818847443a53918c327b1",  # 1.9.4
-            sha256 = "c0c583c7b53a53bcd1f7385f15439dcdf0314d550362379e2db9919a918d1996",
+            commit = "5defb4ed1a4293b8e2bf641e16b156fb9de498cc",  # 1.9.5
+            sha256 = "a03d3136ff6dd092143bba8d3ded641e87b44e6c0b1f632b368f6cc8587524b5",
             build_file = Label("//:third_party/jsoncpp.BUILD"),
         )
 
