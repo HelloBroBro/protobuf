@@ -188,6 +188,7 @@ impl From<&ProtoStr> for PtrAndLen {
 /// This struct is ABI-compatible with the equivalent struct on the C++ side. It
 /// owns (and drops) its data.
 #[repr(C)]
+#[doc(hidden)]
 pub struct SerializedData {
     /// Owns the memory.
     data: NonNull<u8>,
@@ -195,7 +196,7 @@ pub struct SerializedData {
 }
 
 impl SerializedData {
-    pub fn new() -> Self {
+    pub fn new(_private: Private) -> Self {
         Self { data: NonNull::dangling(), len: 0 }
     }
 
@@ -690,8 +691,8 @@ impl UntypedMapIterator {
         from_ffi_value: impl FnOnce(FfiValue) -> View<'a, V>,
     ) -> Option<(View<'a, K>, View<'a, V>)>
     where
-        K: Proxied + ?Sized + 'a,
-        V: ProxiedInMapValue<K> + ?Sized + 'a,
+        K: Proxied + 'a,
+        V: ProxiedInMapValue<K> + 'a,
     {
         if self.at_end() {
             return None;
@@ -899,14 +900,14 @@ mod tests {
         (content.as_mut_ptr(), content.len())
     }
 
-    #[test]
+    #[googletest::test]
     fn test_serialized_data_roundtrip() {
         let (ptr, len) = allocate_byte_array(b"Hello world");
         let serialized_data = SerializedData { data: NonNull::new(ptr).unwrap(), len };
         assert_that!(&*serialized_data, eq(b"Hello world"));
     }
 
-    #[test]
+    #[googletest::test]
     fn test_empty_string() {
         let empty_str: String = RustStringRawParts { data: std::ptr::null(), len: 0 }.into();
         assert_that!(empty_str, eq(""));
