@@ -12,8 +12,8 @@
 use crate::__internal::Private;
 use crate::__runtime::{InnerProtoString, PtrAndLen, RawMessage};
 use crate::{
-    AsView, IntoProxied, IntoView, Mut, MutProxied, MutProxy, Optional, Proxied, Proxy, View,
-    ViewProxy,
+    utf8::Utf8Chunks, AsView, IntoProxied, IntoView, Mut, MutProxied, MutProxy, Optional, Proxied,
+    Proxy, View, ViewProxy,
 };
 use std::borrow::Cow;
 use std::cmp::{Eq, Ord, Ordering, PartialEq, PartialOrd};
@@ -26,7 +26,6 @@ use std::ops::{Deref, DerefMut};
 use std::ptr;
 use std::rc::Rc;
 use std::sync::Arc;
-use utf8::Utf8Chunks;
 
 pub struct ProtoBytes {
     pub(crate) inner: InnerProtoString,
@@ -77,12 +76,6 @@ impl AsView for ProtoBytes {
 
     fn as_view(&self) -> &[u8] {
         self.as_view()
-    }
-}
-
-impl IntoProxied<ProtoBytes> for ProtoBytes {
-    fn into_proxied(self, _private: Private) -> ProtoBytes {
-        self
     }
 }
 
@@ -236,12 +229,6 @@ impl From<&str> for ProtoString {
 impl From<&[u8]> for ProtoString {
     fn from(v: &[u8]) -> Self {
         Self { inner: InnerProtoString::from(v) }
-    }
-}
-
-impl IntoProxied<ProtoString> for ProtoString {
-    fn into_proxied(self, _private: Private) -> ProtoString {
-        self
     }
 }
 

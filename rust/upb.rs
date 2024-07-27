@@ -19,7 +19,10 @@ use std::ptr::{self, NonNull};
 use std::slice;
 use std::sync::OnceLock;
 
+#[cfg(bzl)]
 extern crate upb;
+#[cfg(not(bzl))]
+use crate::upb;
 
 // Temporarily 'pub' since a lot of gencode is directly calling any of the ffi
 // fns.
@@ -679,8 +682,7 @@ pub struct RawMapIter {
 
 impl RawMapIter {
     pub fn new(_private: Private, map: RawMap) -> Self {
-        // SAFETY: __rust_proto_kUpb_Map_Begin is never modified
-        RawMapIter { map, iter: unsafe { __rust_proto_kUpb_Map_Begin } }
+        RawMapIter { map, iter: UPB_MAP_BEGIN }
     }
 
     /// # Safety
