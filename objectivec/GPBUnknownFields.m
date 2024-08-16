@@ -228,9 +228,8 @@ static BOOL MergeFromInputStream(GPBUnknownFields *self, GPBCodedInputStream *in
 }
 
 - (id)copyWithZone:(NSZone *)zone {
-  GPBUnknownFields *copy = [[GPBUnknownFields alloc] init];
-  // Fields are r/o in this api, so just copy the array.
-  copy->fields_ = [fields_ mutableCopyWithZone:zone];
+  GPBUnknownFields *copy = [[GPBUnknownFields allocWithZone:zone] init];
+  copy->fields_ = [[NSMutableArray allocWithZone:zone] initWithArray:fields_ copyItems:YES];
   return copy;
 }
 
@@ -322,6 +321,16 @@ static BOOL MergeFromInputStream(GPBUnknownFields *self, GPBCodedInputStream *in
   [fields_ addObject:field];
   [field release];
   return [group autorelease];
+}
+
+- (GPBUnknownField *)addCopyOfField:(nonnull GPBUnknownField *)field {
+  if (field->type_ == GPBUnknownFieldTypeLegacy) {
+    [NSException raise:NSInternalInconsistencyException
+                format:@"GPBUnknownField is the wrong type"];
+  }
+  GPBUnknownField *result = [field copy];
+  [fields_ addObject:result];
+  return [result autorelease];
 }
 
 - (void)removeField:(nonnull GPBUnknownField *)field {
