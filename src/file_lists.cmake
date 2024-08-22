@@ -40,7 +40,6 @@ set(libprotobuf_srcs
   ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_enum_util.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_message_bases.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_message_reflection.cc
-  ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_message_table_gen.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_message_tctable_full.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_message_tctable_gen.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_message_tctable_lite.cc
@@ -130,8 +129,6 @@ set(libprotobuf_hdrs
   ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_enum_util.h
   ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_message_bases.h
   ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_message_reflection.h
-  ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_message_table.h
-  ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_message_table_gen.h
   ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_message_tctable_decl.h
   ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_message_tctable_gen.h
   ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_message_tctable_impl.h
@@ -253,7 +250,6 @@ set(libprotobuf_lite_hdrs
   ${protobuf_SOURCE_DIR}/src/google/protobuf/extension_set.h
   ${protobuf_SOURCE_DIR}/src/google/protobuf/extension_set_inl.h
   ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_enum_util.h
-  ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_message_table.h
   ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_message_tctable_decl.h
   ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_message_tctable_impl.h
   ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_message_util.h
@@ -749,7 +745,7 @@ set(protoc-gen-upb_hdrs
 set(protoc-gen-upbdefs_srcs
   ${protobuf_SOURCE_DIR}/upb_generator/common.cc
   ${protobuf_SOURCE_DIR}/upb_generator/file_layout.cc
-  ${protobuf_SOURCE_DIR}/upb_generator/protoc-gen-upbdefs.cc
+  ${protobuf_SOURCE_DIR}/upb_generator/reflection/generator.cc
 )
 
 # @//pkg:protoc-gen-upbdefs
@@ -764,19 +760,19 @@ set(protoc-gen-upbdefs_hdrs
 set(protoc-gen-upb_minitable_srcs
   ${protobuf_SOURCE_DIR}/upb_generator/common.cc
   ${protobuf_SOURCE_DIR}/upb_generator/file_layout.cc
+  ${protobuf_SOURCE_DIR}/upb_generator/minitable/generator.cc
+  ${protobuf_SOURCE_DIR}/upb_generator/minitable/main.cc
   ${protobuf_SOURCE_DIR}/upb_generator/names.cc
-  ${protobuf_SOURCE_DIR}/upb_generator/protoc-gen-upb_minitable-main.cc
-  ${protobuf_SOURCE_DIR}/upb_generator/protoc-gen-upb_minitable.cc
 )
 
 # @//pkg:protoc-gen-upb_minitable
 set(protoc-gen-upb_minitable_hdrs
   ${protobuf_SOURCE_DIR}/upb_generator/common.h
   ${protobuf_SOURCE_DIR}/upb_generator/file_layout.h
+  ${protobuf_SOURCE_DIR}/upb_generator/minitable/generator.h
   ${protobuf_SOURCE_DIR}/upb_generator/names.h
   ${protobuf_SOURCE_DIR}/upb_generator/plugin.h
   ${protobuf_SOURCE_DIR}/upb_generator/plugin_bootstrap.h
-  ${protobuf_SOURCE_DIR}/upb_generator/protoc-gen-upb_minitable.h
 )
 
 # @//src/google/protobuf:well_known_type_protos
@@ -1021,7 +1017,6 @@ set(protobuf_test_files
   ${protobuf_SOURCE_DIR}/src/google/protobuf/feature_resolver_test.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_enum_util_test.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_message_reflection_unittest.cc
-  ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_message_table_gen_test.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/generated_message_tctable_lite_test.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/has_bits_test.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/inlined_string_field_unittest.cc
