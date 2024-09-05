@@ -3,8 +3,8 @@
 // source: google/protobuf/wrappers.proto
 // Protobuf C++ Version: 5.29.0-dev
 
-#ifndef GOOGLE_PROTOBUF_INCLUDED_google_2fprotobuf_2fwrappers_2eproto_2epb_2eh
-#define GOOGLE_PROTOBUF_INCLUDED_google_2fprotobuf_2fwrappers_2eproto_2epb_2eh
+#ifndef google_2fprotobuf_2fwrappers_2eproto_2epb_2eh
+#define google_2fprotobuf_2fwrappers_2eproto_2epb_2eh
 
 #include <limits>
 #include <string>
@@ -150,11 +150,7 @@ class PROTOBUF_EXPORT UInt64Value final
   friend void swap(UInt64Value& a, UInt64Value& b) { a.Swap(&b); }
   inline void Swap(UInt64Value* other) {
     if (other == this) return;
-#ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() != nullptr && GetArena() == other->GetArena()) {
-#else   // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() == other->GetArena()) {
-#endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
       InternalSwap(other);
     } else {
       ::google::protobuf::internal::GenericSwap(this, other);
@@ -342,11 +338,7 @@ class PROTOBUF_EXPORT UInt32Value final
   friend void swap(UInt32Value& a, UInt32Value& b) { a.Swap(&b); }
   inline void Swap(UInt32Value* other) {
     if (other == this) return;
-#ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() != nullptr && GetArena() == other->GetArena()) {
-#else   // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() == other->GetArena()) {
-#endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
       InternalSwap(other);
     } else {
       ::google::protobuf::internal::GenericSwap(this, other);
@@ -534,11 +526,7 @@ class PROTOBUF_EXPORT StringValue final
   friend void swap(StringValue& a, StringValue& b) { a.Swap(&b); }
   inline void Swap(StringValue* other) {
     if (other == this) return;
-#ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() != nullptr && GetArena() == other->GetArena()) {
-#else   // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() == other->GetArena()) {
-#endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
       InternalSwap(other);
     } else {
       ::google::protobuf::internal::GenericSwap(this, other);
@@ -732,11 +720,7 @@ class PROTOBUF_EXPORT Int64Value final
   friend void swap(Int64Value& a, Int64Value& b) { a.Swap(&b); }
   inline void Swap(Int64Value* other) {
     if (other == this) return;
-#ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() != nullptr && GetArena() == other->GetArena()) {
-#else   // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() == other->GetArena()) {
-#endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
       InternalSwap(other);
     } else {
       ::google::protobuf::internal::GenericSwap(this, other);
@@ -924,11 +908,7 @@ class PROTOBUF_EXPORT Int32Value final
   friend void swap(Int32Value& a, Int32Value& b) { a.Swap(&b); }
   inline void Swap(Int32Value* other) {
     if (other == this) return;
-#ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() != nullptr && GetArena() == other->GetArena()) {
-#else   // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() == other->GetArena()) {
-#endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
       InternalSwap(other);
     } else {
       ::google::protobuf::internal::GenericSwap(this, other);
@@ -1116,11 +1096,7 @@ class PROTOBUF_EXPORT FloatValue final
   friend void swap(FloatValue& a, FloatValue& b) { a.Swap(&b); }
   inline void Swap(FloatValue* other) {
     if (other == this) return;
-#ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() != nullptr && GetArena() == other->GetArena()) {
-#else   // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() == other->GetArena()) {
-#endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
       InternalSwap(other);
     } else {
       ::google::protobuf::internal::GenericSwap(this, other);
@@ -1308,11 +1284,7 @@ class PROTOBUF_EXPORT DoubleValue final
   friend void swap(DoubleValue& a, DoubleValue& b) { a.Swap(&b); }
   inline void Swap(DoubleValue* other) {
     if (other == this) return;
-#ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() != nullptr && GetArena() == other->GetArena()) {
-#else   // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() == other->GetArena()) {
-#endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
       InternalSwap(other);
     } else {
       ::google::protobuf::internal::GenericSwap(this, other);
@@ -1500,11 +1472,7 @@ class PROTOBUF_EXPORT BytesValue final
   friend void swap(BytesValue& a, BytesValue& b) { a.Swap(&b); }
   inline void Swap(BytesValue* other) {
     if (other == this) return;
-#ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() != nullptr && GetArena() == other->GetArena()) {
-#else   // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() == other->GetArena()) {
-#endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
       InternalSwap(other);
     } else {
       ::google::protobuf::internal::GenericSwap(this, other);
@@ -1698,11 +1666,7 @@ class PROTOBUF_EXPORT BoolValue final
   friend void swap(BoolValue& a, BoolValue& b) { a.Swap(&b); }
   inline void Swap(BoolValue* other) {
     if (other == this) return;
-#ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() != nullptr && GetArena() == other->GetArena()) {
-#else   // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() == other->GetArena()) {
-#endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
       InternalSwap(other);
     } else {
       ::google::protobuf::internal::GenericSwap(this, other);
@@ -2144,4 +2108,4 @@ inline void BytesValue::set_allocated_value(std::string* value) {
 
 #include "google/protobuf/port_undef.inc"
 
-#endif  // GOOGLE_PROTOBUF_INCLUDED_google_2fprotobuf_2fwrappers_2eproto_2epb_2eh
+#endif  // google_2fprotobuf_2fwrappers_2eproto_2epb_2eh

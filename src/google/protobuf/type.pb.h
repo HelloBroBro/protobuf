@@ -3,8 +3,8 @@
 // source: google/protobuf/type.proto
 // Protobuf C++ Version: 5.29.0-dev
 
-#ifndef GOOGLE_PROTOBUF_INCLUDED_google_2fprotobuf_2ftype_2eproto_2epb_2eh
-#define GOOGLE_PROTOBUF_INCLUDED_google_2fprotobuf_2ftype_2eproto_2epb_2eh
+#ifndef google_2fprotobuf_2ftype_2eproto_2epb_2eh
+#define google_2fprotobuf_2ftype_2eproto_2epb_2eh
 
 #include <limits>
 #include <string>
@@ -260,11 +260,7 @@ class PROTOBUF_EXPORT Option final
   friend void swap(Option& a, Option& b) { a.Swap(&b); }
   inline void Swap(Option* other) {
     if (other == this) return;
-#ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() != nullptr && GetArena() == other->GetArena()) {
-#else   // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() == other->GetArena()) {
-#endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
       InternalSwap(other);
     } else {
       ::google::protobuf::internal::GenericSwap(this, other);
@@ -476,11 +472,7 @@ class PROTOBUF_EXPORT Field final
   friend void swap(Field& a, Field& b) { a.Swap(&b); }
   inline void Swap(Field* other) {
     if (other == this) return;
-#ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() != nullptr && GetArena() == other->GetArena()) {
-#else   // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() == other->GetArena()) {
-#endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
       InternalSwap(other);
     } else {
       ::google::protobuf::internal::GenericSwap(this, other);
@@ -864,11 +856,7 @@ class PROTOBUF_EXPORT EnumValue final
   friend void swap(EnumValue& a, EnumValue& b) { a.Swap(&b); }
   inline void Swap(EnumValue* other) {
     if (other == this) return;
-#ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() != nullptr && GetArena() == other->GetArena()) {
-#else   // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() == other->GetArena()) {
-#endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
       InternalSwap(other);
     } else {
       ::google::protobuf::internal::GenericSwap(this, other);
@@ -1093,11 +1081,7 @@ class PROTOBUF_EXPORT Type final
   friend void swap(Type& a, Type& b) { a.Swap(&b); }
   inline void Swap(Type* other) {
     if (other == this) return;
-#ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() != nullptr && GetArena() == other->GetArena()) {
-#else   // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() == other->GetArena()) {
-#endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
       InternalSwap(other);
     } else {
       ::google::protobuf::internal::GenericSwap(this, other);
@@ -1401,11 +1385,7 @@ class PROTOBUF_EXPORT Enum final
   friend void swap(Enum& a, Enum& b) { a.Swap(&b); }
   inline void Swap(Enum* other) {
     if (other == this) return;
-#ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() != nullptr && GetArena() == other->GetArena()) {
-#else   // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetArena() == other->GetArena()) {
-#endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+    if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
       InternalSwap(other);
     } else {
       ::google::protobuf::internal::GenericSwap(this, other);
@@ -3001,4 +2981,4 @@ inline const EnumDescriptor* GetEnumDescriptor<::google::protobuf::Syntax>() {
 
 #include "google/protobuf/port_undef.inc"
 
-#endif  // GOOGLE_PROTOBUF_INCLUDED_google_2fprotobuf_2ftype_2eproto_2epb_2eh
+#endif  // google_2fprotobuf_2ftype_2eproto_2epb_2eh
