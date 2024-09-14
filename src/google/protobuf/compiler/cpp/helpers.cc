@@ -1169,6 +1169,17 @@ bool HasMapFields(const FileDescriptor* file) {
   return false;
 }
 
+bool HasV2Table(const Descriptor* descriptor) {
+  return false;
+}
+
+bool HasV2Table(const FileDescriptor* file) {
+  for (int i = 0; i < file->message_type_count(); ++i) {
+    if (HasV2Table(file->message_type(i))) return true;
+  }
+  return false;
+}
+
 static bool HasEnumDefinitions(const Descriptor* message_type) {
   if (message_type->enum_type_count() > 0) return true;
   for (int i = 0; i < message_type->nested_type_count(); ++i) {
@@ -1677,8 +1688,6 @@ bool GetBootstrapBasename(const Options& options, absl::string_view basename,
            "third_party/protobuf/descriptor"},
           {"third_party/protobuf/cpp_features",
            "third_party/protobuf/cpp_features"},
-          {"third_party/java/protobuf/java_features",
-           "third_party/java/protobuf/java_features_bootstrap"},
           {"third_party/protobuf/compiler/plugin",
            "third_party/protobuf/compiler/plugin"},
           {"net/proto2/compiler/proto/profile",
