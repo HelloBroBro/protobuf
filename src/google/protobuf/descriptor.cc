@@ -7952,32 +7952,6 @@ void DescriptorBuilder::ValidateOptions(const FieldDescriptor* field,
 
   ValidateFieldFeatures(field, proto);
 
-  auto edition = field->file()->edition();
-  auto& field_options = field->options();
-
-  if (field_options.has_ctype()) {
-    if (edition == Edition::EDITION_2023) {
-      if (field->cpp_type() != FieldDescriptor::CPPTYPE_STRING) {
-        AddError(field->full_name(), proto,
-                 DescriptorPool::ErrorCollector::TYPE,
-                 absl::StrFormat("Field %s specifies ctype, but is not a "
-                                 "string nor bytes field.",
-                                 field->full_name())
-                     .c_str());
-      }
-      if (field_options.ctype() == FieldOptions::CORD) {
-        if (field->is_extension()) {
-          AddError(field->full_name(), proto,
-                   DescriptorPool::ErrorCollector::TYPE,
-                   absl::StrFormat("Extension %s specifies ctype=CORD which is "
-                                   "not supported for extensions.",
-                                   field->full_name())
-                       .c_str());
-        }
-      }
-    }
-  }
-
   // Only message type fields may be lazy.
   if (field->options().lazy() || field->options().unverified_lazy()) {
     if (field->type() != FieldDescriptor::TYPE_MESSAGE) {
@@ -9352,8 +9326,8 @@ bool DescriptorBuilder::OptionInterpreter::SetOptionValue(
         // the pool's mutex, and the latter method locks it again.
         Symbol symbol =
             builder_->FindSymbolNotEnforcingDeps(fully_qualified_name);
-        if (auto* candicate_descriptor = symbol.enum_value_descriptor()) {
-          if (candicate_descriptor->type() != enum_type) {
+        if (auto* candidate_descriptor = symbol.enum_value_descriptor()) {
+          if (candidate_descriptor->type() != enum_type) {
             return AddValueError([&] {
               return absl::StrCat(
                   "Enum type \"", enum_type->full_name(),
@@ -9362,7 +9336,7 @@ bool DescriptorBuilder::OptionInterpreter::SetOptionValue(
                   "\". This appears to be a value from a sibling type.");
             });
           } else {
-            enum_value = candicate_descriptor;
+            enum_value = candidate_descriptor;
           }
         }
       } else {

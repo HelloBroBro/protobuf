@@ -68,7 +68,7 @@ def ValidateProtobufRuntimeVersion(
     runtime.
   """
 
-  disable_flag = os.getenv('TEMORARILY_DISABLE_PROTOBUF_VERSION_CHECK')
+  disable_flag = os.getenv('TEMPORARILY_DISABLE_PROTOBUF_VERSION_CHECK')
   if disable_flag is not None and disable_flag.lower() == 'true':
     return
 
@@ -115,14 +115,6 @@ def ValidateProtobufRuntimeVersion(
         f' {location}: gencode {gen_version} runtime {version}. Runtime version'
         f' cannot be older than the linked gencode version. {error_prompt}'
     )
-  elif MINOR > gen_minor or PATCH > gen_patch:
-    if _warning_count < _MAX_WARNING_COUNT:
-      warnings.warn(
-          'Protobuf gencode version %s is older than the runtime version %s at'
-          ' %s. Please avoid checked-in Protobuf gencode that can be obsolete.'
-          % (gen_version, version, location)
-      )
-      _warning_count += 1
 
   if gen_suffix != SUFFIX:
     _ReportVersionError(

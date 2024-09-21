@@ -118,13 +118,6 @@ public final class RuntimeVersion {
               "Detected incompatible Protobuf Gencode/Runtime versions when loading %s: gencode %s,"
                   + " runtime %s. Runtime version cannot be older than the linked gencode version.",
               location, gencodeVersionString, VERSION_STRING));
-    } else if ((MINOR > minor || PATCH > patch) && minorWarningLoggedCount < MAX_WARNING_COUNT) {
-      logger.warning(
-          String.format(
-              " Protobuf gencode version %s is older than the runtime version %s at %s. Please"
-                  + " avoid checked-in Protobuf gencode that can be obsolete.",
-              gencodeVersionString, VERSION_STRING, location));
-      minorWarningLoggedCount++;
     }
 
     // Check that runtime version suffix is the same as the gencode version suffix.
@@ -154,7 +147,7 @@ public final class RuntimeVersion {
 
   private static boolean checkDisabled() {
     // Check the environmental variable, and temporarily disable validation if it's set to true.
-    String disableFlag = java.lang.System.getenv("TEMORARILY_DISABLE_PROTOBUF_VERSION_CHECK");
+    String disableFlag = java.lang.System.getenv("TEMPORARILY_DISABLE_PROTOBUF_VERSION_CHECK");
     if ((disableFlag != null && disableFlag.equals("true"))) {
       return true;
     }
