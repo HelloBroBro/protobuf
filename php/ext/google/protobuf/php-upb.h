@@ -173,10 +173,14 @@ Error, UINTPTR_MAX is undefined
 #define UPB_UNREACHABLE() do { assert(0); } while(0)
 #endif
 
-/* UPB_SETJMP() / UPB_LONGJMP(): avoid setting/restoring signal mask. */
-#ifdef __APPLE__
-#define UPB_SETJMP(buf) _setjmp(buf)
-#define UPB_LONGJMP(buf, val) _longjmp(buf, val)
+/* UPB_SETJMP() / UPB_LONGJMP() */
+// Android uses a custom libc that does not implement all of posix, but it has
+// had sigsetjmp/siglongjmp forever on arm and since API 12 on x86. Apple has
+// sigsetjmp, but does not define the posix feature test macro.
+#if defined(__APPLE__) || defined(_POSIX_C_SOURCE) || defined(__ANDROID__)
+// avoid setting/restoring signal mask, which involves costly syscalls
+#define UPB_SETJMP(buf) sigsetjmp(buf, 0)
+#define UPB_LONGJMP(buf, val) siglongjmp(buf, val)
 #elif defined(WASM_WAMR)
 #define UPB_SETJMP(buf) 0
 #define UPB_LONGJMP(buf, val) abort()
@@ -4163,6 +4167,17 @@ UPB_API_INLINE uint64_t upb_Message_GetExtensionUInt64(
   return ret;
 }
 
+UPB_API_INLINE struct upb_Message* upb_Message_GetExtensionMessage(
+    const struct upb_Message* msg, const upb_MiniTableExtension* e,
+    struct upb_Message* default_val) {
+  UPB_ASSUME(upb_MiniTableExtension_CType(e) == kUpb_CType_Message);
+  UPB_ASSUME(UPB_PRIVATE(_upb_MiniTableExtension_GetRep)(e) ==
+             UPB_SIZE(kUpb_FieldRep_4Byte, kUpb_FieldRep_8Byte));
+  struct upb_Message* ret;
+  _upb_Message_GetExtensionField(msg, e, &default_val, &ret);
+  return ret;
+}
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
@@ -4544,6 +4559,10 @@ UPB_API_INLINE uint32_t upb_Message_GetExtensionUInt32(
 UPB_API_INLINE uint64_t upb_Message_GetExtensionUInt64(
     const upb_Message* msg, const upb_MiniTableExtension* f,
     uint64_t default_val);
+
+UPB_API_INLINE upb_Message* upb_Message_GetExtensionMessage(
+    const upb_Message* msg, const upb_MiniTableExtension* f,
+    struct upb_Message* default_val);
 
 // Extension Setters ///////////////////////////////////////////////////////////
 

@@ -2032,7 +2032,8 @@ internal::FlatAllocator::Allocation* DescriptorPool::Tables::CreateFlatAlloc(
       typename std::tuple_element<sizeof...(T) - 1, std::tuple<T...>>::type>();
   size_t total_size =
       last_end + RoundUpTo<FlatAlloc::kMaxAlign>(sizeof(FlatAlloc));
-  char* data = static_cast<char*>(::operator new(total_size));
+  char* data = static_cast<char*>(::operator new(total_size
+                                                 ));
   auto* res = ::new (data) FlatAlloc(ends);
   flat_allocs_.emplace_back(res);
 
@@ -4806,7 +4807,7 @@ DescriptorBuilder::DescriptorBuilder(
   // have to avoid registering these pre-main, because we need to ensure that
   // the linker --gc-sections step can strip out the full runtime if it is
   // unused.
-  PROTOBUF_UNUSED static std::true_type lazy_register =
+  [[maybe_unused]] static std::true_type lazy_register =
       (internal::ExtensionSet::RegisterMessageExtension(
            &FeatureSet::default_instance(), pb::cpp.number(),
            FieldDescriptor::TYPE_MESSAGE, false, false,
