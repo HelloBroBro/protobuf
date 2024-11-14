@@ -530,6 +530,7 @@ typedef struct {
   upb_Arena* arena; /* TODO: should we have a tmp arena for tmp data? */
   const upb_DefPool* symtab;
   int depth;
+  int result;
   upb_Status* status;
   jmp_buf err;
   int line;
@@ -1159,6 +1160,16 @@ static int64_t jsondec_strtoint64(jsondec* d, upb_StringView str) {
   return ret;
 }
 
+static void jsondec_checkempty(jsondec* d, upb_StringView str,
+                               const upb_FieldDef* f) {
+  if (str.size != 0) return;
+  d->result = kUpb_JsonDecodeResult_OkWithEmptyStringNumerics;
+  upb_Status_SetErrorFormat(d->status,
+                            "Empty string is not a valid number (field: %s). "
+                            "This will be an error in a future version.",
+                            upb_FieldDef_FullName(f));
+}
+
 /* Primitive value types ******************************************************/
 
 /* Parse INT32 or INT64 value. */
@@ -1180,6 +1191,7 @@ static upb_MessageValue jsondec_int(jsondec* d, const upb_FieldDef* f) {
     }
     case JD_STRING: {
       upb_StringView str = jsondec_string(d);
+      jsondec_checkempty(d, str, f);
       val.int64_val = jsondec_strtoint64(d, str);
       break;
     }
@@ -1217,6 +1229,7 @@ static upb_MessageValue jsondec_uint(jsondec* d, const upb_FieldDef* f) {
     }
     case JD_STRING: {
       upb_StringView str = jsondec_string(d);
+      jsondec_checkempty(d, str, f);
       val.uint64_val = jsondec_strtouint64(d, str);
       break;
     }
@@ -1245,14 +1258,26 @@ static upb_MessageValue jsondec_double(jsondec* d, const upb_FieldDef* f) {
       break;
     case JD_STRING:
       str = jsondec_string(d);
-      if (jsondec_streql(str, "NaN")) {
+      if (str.size == 0) {
+        jsondec_checkempty(d, str, f);
+        val.double_val = 0.0;
+      } else if (jsondec_streql(str, "NaN")) {
         val.double_val = NAN;
       } else if (jsondec_streql(str, "Infinity")) {
         val.double_val = INFINITY;
       } else if (jsondec_streql(str, "-Infinity")) {
         val.double_val = -INFINITY;
       } else {
-        val.double_val = strtod(str.data, NULL);
+        char* end;
+        val.double_val = strtod(str.data, &end);
+        if (end != str.data + str.size) {
+          d->result = kUpb_JsonDecodeResult_OkWithEmptyStringNumerics;
+          upb_Status_SetErrorFormat(
+              d->status,
+              "Non-number characters in quoted number (field: %s). "
+              "This will be an error in a future version.",
+              upb_FieldDef_FullName(f));
+        }
       }
       break;
     default:
@@ -1994,10 +2019,10 @@ static void jsondec_wellknown(jsondec* d, upb_Message* msg,
   }
 }
 
-static bool upb_JsonDecoder_Decode(jsondec* const d, upb_Message* const msg,
-                                   const upb_MessageDef* const m) {
+static int upb_JsonDecoder_Decode(jsondec* const d, upb_Message* const msg,
+                                  const upb_MessageDef* const m) {
   UPB_ASSERT(!upb_Message_IsFrozen(msg));
-  if (UPB_SETJMP(d->err)) return false;
+  if (UPB_SETJMP(d->err)) return kUpb_JsonDecodeResult_Error;
 
   jsondec_tomsg(d, msg, m);
 
@@ -2006,16 +2031,19 @@ static bool upb_JsonDecoder_Decode(jsondec* const d, upb_Message* const msg,
   jsondec_consumews(d);
 
   if (d->ptr == d->end) {
-    return true;
+    return d->result;
   } else {
     jsondec_seterrmsg(d, "unexpected trailing characters");
-    return false;
+    return kUpb_JsonDecodeResult_Error;
   }
 }
 
-bool upb_JsonDecode(const char* buf, size_t size, upb_Message* msg,
-                    const upb_MessageDef* m, const upb_DefPool* symtab,
-                    int options, upb_Arena* arena, upb_Status* status) {
+int upb_JsonDecodeDetectingNonconformance(const char* buf, size_t size,
+                                          upb_Message* msg,
+                                          const upb_MessageDef* m,
+                                          const upb_DefPool* symtab,
+                                          int options, upb_Arena* arena,
+                                          upb_Status* status) {
   UPB_ASSERT(!upb_Message_IsFrozen(msg));
   jsondec d;
 
@@ -2028,6 +2056,7 @@ bool upb_JsonDecode(const char* buf, size_t size, upb_Message* msg,
   d.status = status;
   d.options = options;
   d.depth = 64;
+  d.result = kUpb_JsonDecodeResult_Ok;
   d.line = 1;
   d.line_begin = d.ptr;
   d.debug_field = NULL;
@@ -3574,13 +3603,19 @@ void upb_Array_Freeze(upb_Array* arr, const upb_MiniTable* m) {
 
 // Must be last.
 
-const upb_MiniTableExtension* upb_Message_ExtensionByIndex(
-    const upb_Message* msg, size_t index) {
+bool upb_Message_NextExtension(const upb_Message* msg,
+                               const upb_MiniTableExtension** result,
+                               uintptr_t* iter) {
   size_t count;
   const upb_Extension* ext = UPB_PRIVATE(_upb_Message_Getexts)(msg, &count);
-
-  UPB_ASSERT(index < count);
-  return ext[index].ext;
+  size_t i = *iter;
+  if (i >= count) {
+    return false;
+    *result = NULL;
+  }
+  *result = ext[i].ext;
+  *iter = i + 1;
+  return true;
 }
 
 const upb_MiniTableExtension* upb_Message_FindExtensionByNumber(
@@ -3912,6 +3947,14 @@ bool upb_Message_NextUnknown(const upb_Message* msg, upb_StringView* data,
   }
   data->size = 0;
   data->data = NULL;
+  return false;
+}
+
+bool upb_Message_HasUnknown(const upb_Message* msg) {
+  const upb_Message_Internal* in = UPB_PRIVATE(_upb_Message_GetInternal)(msg);
+  if (in) {
+    return in->unknown_end > message_overhead;
+  }
   return false;
 }
 
